@@ -1,20 +1,16 @@
 ---
 title: Technical Explanation
-order: 2
+order: 1
 ---
 
 # Technical Explanation
 
-This document hopes to answer the question: "What _is_ Remix?" Remix is four things:
+Built on top of [React Router][reactrouter], Remix is four things:
 
 1. A compiler
 2. A server-side HTTP handler
 3. A server framework
 4. A browser framework
-
-When all four of these things know about each other, you can do some pretty interesting things.
-
-We often describe Remix as "a compiler for React Router" because everything about Remix takes advantage of nested routes. App developers add files to `app/routes/*` and then Remix takes off from there.
 
 ## Compiler
 
@@ -40,10 +36,7 @@ const remix = require("@remix-run/express");
 
 const app = express();
 
-app.all(
-  "*",
-  remix.createRequestHandler({ build: require("./build") })
-);
+app.all("*", remix.createRequestHandler({ build: require("./build") }));
 ```
 
 Express (or Node.js) is the actual server, Remix is just a handler on that server. The `"@remix-run/express"` package is called an adapter. Remix handlers are server agnostic. Adapters make them work for a specific server by converting the server's request/response API into the Fetch API on the way in, and then adapting the Fetch Response coming from Remix into the server's response API. Here's some pseudo code of what an adapter does:
@@ -92,19 +85,6 @@ export async function loader() {
   return json(await db.projects.findAll());
 }
 
-// Actions only run on the server and handle POST
-// PUT, PATCH, and DELETE. They can also provide data
-// to the component
-export async function action({ request }: ActionArgs) {
-  const form = await request.formData();
-  const errors = validate(form);
-  if (errors) {
-    return json({ errors });
-  }
-  await createProject({ title: form.get("title") });
-  return json({ ok: true });
-}
-
 // The default export is the component that will be
 // rendered when a route matches the URL. This runs
 // both on the server and the client
@@ -135,6 +115,19 @@ export default function Projects() {
       <Outlet />
     </div>
   );
+}
+
+// Actions only run on the server and handle POST
+// PUT, PATCH, and DELETE. They can also provide data
+// to the component
+export async function action({ request }: ActionArgs) {
+  const form = await request.formData();
+  const errors = validate(form);
+  if (errors) {
+    return json({ errors });
+  }
+  await createProject({ title: form.get("title") });
+  return json({ ok: true });
 }
 ```
 
@@ -226,3 +219,4 @@ We borrowed an old term and called this Progressive Enhancement in Remix. Start 
 [vercel]: https://vercel.com
 [netlify]: https://netlify.com
 [arc]: https://arc.codes
+[reactrouter]: https://reactrouter.com

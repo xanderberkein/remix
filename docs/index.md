@@ -6,39 +6,33 @@ toc: false
 hidden: true
 ---
 
-# Remix Docs
+# Build Better Websites
 
-## Getting Started
-
-```sh
-npx create-remix@latest
-```
-
-We **strongly encourage you** to do one of the tutorials before anything else. Remix is different. The tutorials will show you how to start with web fundamentals and then progressively enhance your app to the modern UX you're after.
+Remix crosses the center of the web stack by upgrading your HTML to a speedy, client side web app with the resilience and simplicity of traditional server rendered HTML. It polyfills your server with Web Standard IO, allowing you to deploy anywhere with knowledge that transfers to any web project. Finally, it creates seamless full stack development by creating an automatic API for your views with co-located client and server code. The result is a modern, robust user experience with APIs and conventions your whole team can get behind.
 
 <docs-cards>
-  <a href="v1/tutorials/blog" aria-label="Developer Blog Tutorial">
+  <a href="main/start/technical-explanation" aria-label="Technical Explanation">
     <docs-card>
-      <h4>Quickstart</h4>
-      <p>Spend your first few minutes with Remix here and let us introduce some of the core features as quickly as possible. After this you can go explore the docs or dive deeper with the other tutorials. We'll build a little markdown blog with data loading, actions, form validation, redirects, and more.</p>
+      <h4 class="text-blue-brand">I'm just curious...</h4> 
+      <p>Start with the <b>Technical Explanation</b>. Remix is a new kind of web framework that we like to call "centerstack". It blends old and new web development models in a unique way that deserves some explanation!</p>
     </docs-card>
   </a>
-  <a href="v1/tutorials/jokes" aria-label="Jokes App Tutorial">
+  <a href="main/start/tutorial" aria-label="Developer Blog Tutorial">
     <docs-card>
-      <h4>Jokes App Deep Dive</h4> 
-      <p>Dive deep into Remix and full stack development with this app. It's backed by a SQL database, user authentication and session, and of course some modern UI finishes. You'll learn about nested routes, sessions, data loading, data mutations, progressive enhancement, and more. Get a feel for what a data-backed web app feels like with Remix.</p>
+      <h4 class="text-green-brand">I'm in a hurry!</h4>
+      <p>Spend your first few minutes with Remix in the <b>Quickstart Tutorial</b>. It introduces the core features as quickly as possible building a little contact management app. You'll see data loading, actions, form validation, search, redirects, and more.</p>
     </docs-card>
   </a>
-  <a href="v1/api/conventions" aria-label="Conventional APIs">
+  <a href="main/book/01-runtimes" aria-label="Runtimes, Adapters, Stacks, and Deployment">
     <docs-card>
-      <h4>Conventional APIs</h4> 
-      <p>Remix has a handful of conventions to make web application development a breeze. You'll spend some time in this document when you're first learning Remix, but probably won't need it much after you get your feet wet.</p>
+      <h4 class="text-pink-brand">I'm in, let's go.</h4> 
+      <p>The <b>Remix Book</b> is a linear learning path to expose you to the entire Remix API, use cases, behavior, and trade offs. Get yourself a drink and some snacks then dive deep into building better web apps with Remix.</p>
     </docs-card>
   </a>
-  <a href="v1/api/remix" aria-label="Remix API">
+  <a href="main/start/community" aria-label="Remix API">
     <docs-card>
-      <h4>Remix Package API</h4>
-      <p>This is probably the doc page you'll visit the most. It's got all of the Remix package exports that you'll use day-to-day in your app.</p>
+      <h4 class="text-red-brand">I'm stuck!</h4>
+      <p>Need help? Want to contribute? Remix is developed in the open with an helpful community. Come and see where to find us on the <b>Community</b> page, follow along with Remix development, get help, and contribute back!</p>
     </docs-card>
   </a>
 </docs-cards>
