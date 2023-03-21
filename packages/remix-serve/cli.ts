@@ -1,6 +1,7 @@
 import "./env";
-import path from "path";
-import os from "os";
+import { pathToFileURL } from "node:url";
+import os from "node:os";
+import path from "node:path";
 
 import { createApp } from "./index";
 
@@ -33,18 +34,34 @@ let onListen = () => {
   }
 };
 
-let build = require(buildPath);
+export async function getBuildInfo(buildPath: string) {
+  let resolvedBuildPath = require.resolve(buildPath);
+  try {
+    let buildModule = await import(pathToFileURL(resolvedBuildPath).href);
+    return {
+      build: buildModule?.default || buildModule,
+      buildPath: resolvedBuildPath,
+    };
+  } catch (error: unknown) {
+    throw new Error(
+      `Error loading Remix config at ${buildPath}\n${String(error)}`
+    );
+  }
+}
 
-let app = createApp(
-  buildPath,
-  process.env.NODE_ENV,
-  build.publicPath,
-  build.assetsBuildDirectory
-);
-let server = process.env.HOST
-  ? app.listen(port, process.env.HOST, onListen)
-  : app.listen(port, onListen);
+(async () => {
+  let buildInfo = await getBuildInfo(buildPath);
+  let app = createApp(
+    buildInfo.buildPath,
+    process.env.NODE_ENV,
+    buildInfo.build.publicPath,
+    buildInfo.build.assetsBuildDirectory
+  );
+  let server = process.env.HOST
+    ? app.listen(port, process.env.HOST, onListen)
+    : app.listen(port, onListen);
 
-["SIGTERM", "SIGINT"].forEach((signal) => {
-  process.once(signal, () => server?.close(console.error));
-});
+  ["SIGTERM", "SIGINT"].forEach((signal) => {
+    process.once(signal, () => server?.close(console.error));
+  });
+})();

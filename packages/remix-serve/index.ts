@@ -3,6 +3,8 @@ import compression from "compression";
 import morgan from "morgan";
 import { createRequestHandler } from "@remix-run/express";
 
+import { getBuildInfo } from "./cli";
+
 export function createApp(
   buildPath: string,
   mode = "production",
@@ -26,10 +28,13 @@ export function createApp(
   app.all(
     "*",
     mode === "production"
-      ? createRequestHandler({ build: require(buildPath), mode })
-      : (req, res, next) => {
+      ? async (req, res, next) => {
+          let { build } = await getBuildInfo(buildPath);
+          createRequestHandler({ build, mode })(req, res, next);
+        }
+      : async (req, res, next) => {
+          let { build } = await getBuildInfo(buildPath);
           // require cache is purged in @remix-run/dev where the file watcher is
-          let build = require(buildPath);
           return createRequestHandler({ build, mode })(req, res, next);
         }
   );
