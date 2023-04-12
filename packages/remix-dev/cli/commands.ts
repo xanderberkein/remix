@@ -165,14 +165,31 @@ export async function build(
     );
   }
 
-  let start = Date.now();
-  let config = await readConfig(remixRoot);
-  await compiler.build(config, {
-    mode,
-    sourcemap,
-  });
-
-  log(`Built in ${prettyMs(Date.now() - start)}`);
+  try {
+    let start = Date.now();
+    let config = await readConfig(remixRoot);
+    let result = await compiler.build(config, {
+      mode,
+      sourcemap,
+    });
+    if (!result.ok) {
+      if (result.error.assetsCss) {
+        console.error(getErrorMessage(result.error.assetsCss));
+      }
+      if (result.error.assetsJs) {
+        console.error(getErrorMessage(result.error.assetsJs));
+      }
+      if (result.error.server) {
+        console.error(getErrorMessage(result.error.server));
+      }
+      process.exit(1);
+    }
+    log(`Built in ${prettyMs(Date.now() - start)}`);
+  } catch (error) {
+    console.error(getErrorMessage(error));
+    console.info("This is a Remix bug; file a bug report!");
+    process.exit(1);
+  }
 }
 
 export async function watch(
@@ -424,3 +441,8 @@ async function createClientEntry(
   let contents = await fse.readFile(inputFile, "utf-8");
   return contents;
 }
+
+let getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  return String(error);
+};

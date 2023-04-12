@@ -11,16 +11,12 @@ export async function build(
     sourcemap = false,
     onWarning = warnOnce,
   }: Partial<CompileOptions> = {}
-): Promise<void> {
+) {
   let compiler = await Compiler.create(config, {
     mode,
     target,
     sourcemap,
     onWarning,
   });
-  let result = await compiler.compile();
-  if (!result.ok) {
-    // TODO handle errors
-    throw Error("TODO");
-  }
+  return compiler.compile();
 }
