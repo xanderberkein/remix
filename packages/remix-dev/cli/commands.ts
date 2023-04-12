@@ -21,6 +21,7 @@ import runCodemod from "../codemod";
 import { CodemodError } from "../codemod/utils/error";
 import { TaskError } from "../codemod/utils/task";
 import { transpile as convertFileToJS } from "./useJavascript";
+import { logger } from "../tux/log";
 
 export async function create({
   appTemplate,
@@ -114,11 +115,11 @@ export async function setup(platformArg?: string) {
     platformArg === "cloudflare-workers" ||
     platformArg === "cloudflare-pages"
   ) {
-    console.warn(
+    logger.warn(
       `Using '${platformArg}' as a platform value is deprecated. Use ` +
         "'cloudflare' instead."
     );
-    console.log("HINT: check the `postinstall` script in `package.json`");
+    logger.info("HINT: check the `postinstall` script in `package.json`");
     platform = SetupPlatform.Cloudflare;
   } else {
     platform = isSetupPlatform(platformArg) ? platformArg : SetupPlatform.Node;
@@ -126,7 +127,7 @@ export async function setup(platformArg?: string) {
 
   await setupRemix(platform);
 
-  console.log(`Successfully setup Remix for ${platform}.`);
+  logger.info(`Successfully setup Remix for ${platform}.`);
 }
 
 export async function routes(
@@ -147,20 +148,16 @@ export async function build(
 ): Promise<void> {
   let mode = compiler.parseMode(modeArg ?? "", "production");
 
-  console.log(`Building Remix app in ${mode} mode...`);
+  logger.info(`Building Remix app in ${mode} mode...`);
 
   if (modeArg === "production" && sourcemap) {
-    console.warn(
-      "\n⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️"
-    );
-    console.warn(
-      "You have enabled source maps in production. This will make your " +
+    logger.warn(
+      "\n⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️" +
+        "You have enabled source maps in production. This will make your " +
         "server-side code visible to the public and is highly discouraged! If " +
         "you insist, please ensure you are using environment variables for " +
-        "secrets and not hard-coding them into your source!"
-    );
-    console.warn(
-      "⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️\n"
+        "secrets and not hard-coding them into your source!" +
+        "⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️\n"
     );
   }
 
@@ -173,20 +170,20 @@ export async function build(
     });
     if (!result.ok) {
       if (result.error.assetsCss) {
-        console.error(getErrorMessage(result.error.assetsCss));
+        logger.error(getErrorMessage(result.error.assetsCss));
       }
       if (result.error.assetsJs) {
-        console.error(getErrorMessage(result.error.assetsJs));
+        logger.error(getErrorMessage(result.error.assetsJs));
       }
       if (result.error.server) {
-        console.error(getErrorMessage(result.error.server));
+        logger.error(getErrorMessage(result.error.server));
       }
       process.exit(1);
     }
-    console.log(`Built in ${prettyMs(Date.now() - start)}`);
+    logger.info(`Built in ${prettyMs(Date.now() - start)}`);
   } catch (error) {
-    console.error(getErrorMessage(error));
-    console.info("This is a Remix bug; file a bug report!");
+    logger.error(getErrorMessage(error));
+    logger.info("This is a Remix bug; file a bug report!");
     process.exit(1);
   }
 }
@@ -196,7 +193,7 @@ export async function watch(
   modeArg?: string
 ): Promise<void> {
   let mode = compiler.parseMode(modeArg ?? "", "development");
-  console.log(`Watching Remix app in ${mode} mode...`);
+  logger.info(`Watching Remix app in ${mode} mode...`);
 
   let config =
     typeof remixRootOrConfig === "object"
@@ -206,7 +203,7 @@ export async function watch(
   devServer.liveReload(config, {
     mode,
     onInitialBuild: (durationMs) =>
-      console.log(`💿 Built in ${prettyMs(durationMs)}`),
+      logger.info(`💿 Built in ${prettyMs(durationMs)}`),
   });
   return await new Promise(() => {});
 }
@@ -234,8 +231,8 @@ export async function codemod(
   { dry = false, force = false } = {}
 ) {
   if (!codemodName) {
-    console.error(colors.red("Error: Missing codemod name"));
-    console.log(
+    logger.error("Missing codemod name");
+    logger.info(
       "Usage: " +
         colors.gray(
           `remix codemod <${colors.arg("codemod")}> [${colors.arg(
@@ -252,8 +249,8 @@ export async function codemod(
     });
   } catch (error: unknown) {
     if (error instanceof CodemodError) {
-      console.error(`${colors.red("Error:")} ${error.message}`);
-      if (error.additionalInfo) console.info(colors.gray(error.additionalInfo));
+      logger.error(error.message);
+      if (error.additionalInfo) logger.info(error.additionalInfo);
       process.exit(1);
     }
     if (error instanceof TaskError) {
@@ -299,9 +296,7 @@ export async function generateEntry(
     let entriesArray = Array.from(entries);
     let list = conjunctionListFormat.format(entriesArray);
 
-    console.error(
-      colors.error(`Invalid entry file. Valid entry files are ${list}`)
-    );
+    logger.error(`Invalid entry file. Valid entry files are ${list}`);
     return;
   }
 
@@ -337,10 +332,8 @@ export async function generateEntry(
       "@remix-run/node",
     ];
     let formattedList = disjunctionListFormat.format(serverRuntimes);
-    console.error(
-      colors.error(
-        `Could not determine server runtime. Please install one of the following: ${formattedList}`
-      )
+    logger.error(
+      `Could not determine server runtime. Please install one of the following: ${formattedList}`
     );
     return;
   }
@@ -348,10 +341,8 @@ export async function generateEntry(
   let clientRenderer = deps["@remix-run/react"] ? "react" : undefined;
 
   if (!clientRenderer) {
-    console.error(
-      colors.error(
-        `Could not determine runtime. Please install the following: @remix-run/react`
-      )
+    logger.error(
+      `Could not determine runtime. Please install the following: @remix-run/react`
     );
     return;
   }
@@ -395,13 +386,11 @@ export async function generateEntry(
     await fse.writeFile(outputFile, contents, "utf-8");
   }
 
-  console.log(
-    colors.blue(
-      `Entry file ${entry} created at ${path.relative(
-        config.rootDirectory,
-        outputFile
-      )}.`
-    )
+  logger.info(
+    `Entry file ${entry} created at ${path.relative(
+      config.rootDirectory,
+      outputFile
+    )}.`
   );
 }
 
@@ -415,7 +404,7 @@ async function checkForEntry(
     let exists = await fse.pathExists(entryPath);
     if (exists) {
       let relative = path.relative(rootDirectory, entryPath);
-      console.error(colors.error(`Entry file ${relative} already exists.`));
+      logger.error(`Entry file ${relative} already exists.`);
       return process.exit(1);
     }
   }

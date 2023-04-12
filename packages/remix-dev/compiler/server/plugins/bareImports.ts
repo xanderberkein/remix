@@ -4,6 +4,7 @@ import { builtinModules } from "module";
 import { isAbsolute, relative } from "path";
 import type { Plugin } from "esbuild";
 
+import { logger } from "../../../tux/log";
 import type { RemixConfig } from "../../../config";
 import {
   serverBuildVirtualModule,
@@ -158,7 +159,7 @@ function warnOnceIfEsmOnlyPackage(
     let packageJsonFile = path.join(packageDir, "package.json");
 
     if (!fs.existsSync(packageJsonFile)) {
-      console.log(packageJsonFile, `does not exist`);
+      logger.warn(`${packageJsonFile} does not exist`);
       return;
     }
     let pkg = JSON.parse(fs.readFileSync(packageJsonFile, "utf-8"));
