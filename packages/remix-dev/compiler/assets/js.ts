@@ -112,7 +112,7 @@ const createEsbuildConfig = (
   }
 
   let plugins: esbuild.Plugin[] = [
-    deprecatedRemixPackagePlugin(options.onWarning),
+    deprecatedRemixPackagePlugin(options.logger),
     config.future.unstable_cssModules
       ? cssModulesPlugin({ config, mode, outputCss: false })
       : null,
@@ -148,7 +148,6 @@ const createEsbuildConfig = (
           let packageName = getNpmPackageName(args.path);
           let pkgManager = getPreferredPackageManager();
           if (
-            options.onWarning &&
             !isNodeBuiltIn(packageName) &&
             !/\bnode_modules\b/.test(args.importer) &&
             // Silence spurious warnings when using Yarn PnP. Yarn PnP doesn’t use
@@ -160,7 +159,7 @@ const createEsbuildConfig = (
             try {
               require.resolve(args.path);
             } catch (error: unknown) {
-              options.onWarning(
+              options.logger.warn(
                 `The path "${args.path}" is imported in ` +
                   `${path.relative(process.cwd(), args.importer)} but ` +
                   `"${args.path}" was not found in your node_modules. ` +

@@ -4,7 +4,7 @@ import { builtinModules } from "module";
 import { isAbsolute, relative } from "path";
 import type { Plugin } from "esbuild";
 
-import { logger } from "../../../tux/log";
+import type { Logger } from "../../../tux/log";
 import type { RemixConfig } from "../../../config";
 import {
   serverBuildVirtualModule,
@@ -19,13 +19,13 @@ import { getPreferredPackageManager } from "../../../cli/getPreferredPackageMana
  * This includes externalizing for node based platforms, and bundling for single file
  * environments such as cloudflare.
  */
-export function serverBareModulesPlugin(
-  remixConfig: RemixConfig,
-  onWarning?: (warning: string, key: string) => void
-): Plugin {
+export function serverBareModulesPlugin(ctx: {
+  config: RemixConfig;
+  logger: Logger;
+}): Plugin {
   // Resolve paths according to tsconfig paths property
-  let matchPath = remixConfig.tsconfigPath
-    ? createMatchPath(remixConfig.tsconfigPath)
+  let matchPath = ctx.config.tsconfigPath
+    ? createMatchPath(ctx.config.tsconfigPath)
     : undefined;
   function resolvePath(id: string) {
     if (!matchPath) {
@@ -80,7 +80,6 @@ export function serverBareModulesPlugin(
 
         // Warn if we can't find an import for a package.
         if (
-          onWarning &&
           !isNodeBuiltIn(packageName) &&
           !/\bnode_modules\b/.test(importer) &&
           // Silence spurious warnings when using Yarn PnP. Yarn PnP doesn’t use
@@ -92,21 +91,20 @@ export function serverBareModulesPlugin(
           try {
             require.resolve(path);
           } catch (error: unknown) {
-            onWarning(
+            ctx.logger.warn(
               `The path "${path}" is imported in ` +
                 `${relative(process.cwd(), importer)} but ` +
                 `"${path}" was not found in your node_modules. ` +
-                `Did you forget to install it?`,
-              path
+                `Did you forget to install it?`
             );
           }
         }
 
-        if (remixConfig.serverDependenciesToBundle === "all") {
+        if (ctx.config.serverDependenciesToBundle === "all") {
           return undefined;
         }
 
-        for (let pattern of remixConfig.serverDependenciesToBundle) {
+        for (let pattern of ctx.config.serverDependenciesToBundle) {
           // bundle it if the path matches the pattern
           if (
             typeof pattern === "string" ? path === pattern : pattern.test(path)
@@ -116,12 +114,11 @@ export function serverBareModulesPlugin(
         }
 
         if (
-          onWarning &&
           !isNodeBuiltIn(packageName) &&
           kind !== "dynamic-import" &&
-          remixConfig.serverPlatform === "node"
+          ctx.config.serverPlatform === "node"
         ) {
-          warnOnceIfEsmOnlyPackage(packageName, path, onWarning);
+          warnOnceIfEsmOnlyPackage(packageName, path, ctx.logger);
         }
 
         // Externalize everything else if we've gotten here.
@@ -152,7 +149,7 @@ function isBareModuleId(id: string): boolean {
 function warnOnceIfEsmOnlyPackage(
   packageName: string,
   fullImportPath: string,
-  onWarning: (msg: string, key: string) => void
+  logger: Logger
 ) {
   try {
     let packageDir = resolveModuleBasePath(packageName, fullImportPath);
@@ -181,10 +178,9 @@ function warnOnceIfEsmOnlyPackage(
       }
 
       if (isEsmOnly) {
-        onWarning(
+        logger.warn(
           `${packageName} is possibly an ESM only package and should be bundled with ` +
-            `"serverDependenciesToBundle" in remix.config.js.`,
-          packageName + ":esm-only"
+            `"serverDependenciesToBundle" in remix.config.js.`
         );
       }
     }

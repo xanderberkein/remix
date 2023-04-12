@@ -49,7 +49,6 @@ export async function watch(
     target = "node14",
     sourcemap = true,
     reloadConfig = readConfig,
-    onWarning = warnOnce,
     onRebuildStart,
     onRebuildFinish,
     onFileCreated,
@@ -63,7 +62,6 @@ export async function watch(
     liveReloadPort,
     target,
     sourcemap,
-    onWarning,
   };
 
   let start = Date.now();

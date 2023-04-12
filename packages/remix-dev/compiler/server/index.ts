@@ -23,6 +23,7 @@ import { serverBareModulesPlugin } from "./plugins/bareImports";
 import { serverEntryModulePlugin } from "./plugins/entry";
 import { serverRouteModulesPlugin } from "./plugins/routes";
 import { externalPlugin } from "../plugins/external";
+import type { Context } from "../context";
 
 type Compiler = {
   // produce ./build/index.js
@@ -31,46 +32,44 @@ type Compiler = {
 };
 
 const createEsbuildConfig = (
-  config: RemixConfig,
-  options: CompileOptions,
+  ctx: Context,
   channels: { manifest: Channel.Read<Manifest> }
 ): esbuild.BuildOptions => {
   let stdin: esbuild.StdinOptions | undefined;
   let entryPoints: string[] | undefined;
 
-  if (config.serverEntryPoint) {
-    entryPoints = [config.serverEntryPoint];
+  if (ctx.config.serverEntryPoint) {
+    entryPoints = [ctx.config.serverEntryPoint];
   } else {
     stdin = {
-      contents: config.serverBuildTargetEntryModule,
-      resolveDir: config.rootDirectory,
+      contents: ctx.config.serverBuildTargetEntryModule,
+      resolveDir: ctx.config.rootDirectory,
       loader: "ts",
     };
   }
 
-  let { mode } = options;
   let outputCss = false;
 
   let plugins: esbuild.Plugin[] = [
-    deprecatedRemixPackagePlugin(options.onWarning),
-    config.future.unstable_cssModules
-      ? cssModulesPlugin({ config, mode, outputCss })
+    deprecatedRemixPackagePlugin(ctx),
+    ctx.config.future.unstable_cssModules
+      ? cssModulesPlugin(ctx, { outputCss })
       : null,
-    config.future.unstable_vanillaExtract
-      ? vanillaExtractPlugin({ config, mode, outputCss })
+    ctx.config.future.unstable_vanillaExtract
+      ? vanillaExtractPlugin(ctx, { outputCss })
       : null,
-    config.future.unstable_cssSideEffectImports
-      ? cssSideEffectImportsPlugin({ config, options })
+    ctx.config.future.unstable_cssSideEffectImports
+      ? cssSideEffectImportsPlugin(ctx)
       : null,
-    cssFilePlugin({ config, options }),
+    cssFilePlugin(ctx),
     absoluteCssUrlsPlugin(),
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
-    mdxPlugin(config),
-    emptyModulesPlugin(config, /\.client(\.[jt]sx?)?$/),
-    serverRouteModulesPlugin(config),
-    serverEntryModulePlugin(config, { liveReloadPort: options.liveReloadPort }),
+    mdxPlugin(ctx),
+    emptyModulesPlugin(ctx, /\.client(\.[jt]sx?)?$/),
+    serverRouteModulesPlugin(ctx),
+    serverEntryModulePlugin(ctx),
     serverAssetsManifestPlugin(channels),
-    serverBareModulesPlugin(config, options.onWarning),
+    serverBareModulesPlugin(ctx),
     externalPlugin(/^node:.*/, { sideEffects: false }),
   ].filter(isNotNull);
 
@@ -166,17 +165,16 @@ async function writeServerBuildResult(
 }
 
 export const create = async (
-  remixConfig: RemixConfig,
-  options: CompileOptions,
+  ctx: Context,
   channels: { manifest: Channel.Read<Manifest> }
 ): Promise<Compiler> => {
-  let ctx = await esbuild.context({
-    ...createEsbuildConfig(remixConfig, options, channels),
+  let compiler = await esbuild.context({
+    ...createEsbuildConfig(ctx, channels),
     write: false,
   });
   let compile = async () => {
     try {
-      let { outputFiles } = await ctx.rebuild();
+      let { outputFiles } = await compiler.rebuild();
       await writeServerBuildResult(remixConfig, outputFiles!);
       return ok();
     } catch (error) {
@@ -185,7 +183,7 @@ export const create = async (
   };
   return {
     compile,
-    dispose: ctx.dispose,
+    dispose: compiler.dispose,
   };
 };
 

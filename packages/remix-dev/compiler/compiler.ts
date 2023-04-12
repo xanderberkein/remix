@@ -6,6 +6,7 @@ import { type Manifest } from "../manifest";
 import type { CompileOptions } from "./options";
 import * as AssetsCompiler from "./assets";
 import * as ServerCompiler from "./server";
+import type { Context } from "./context";
 
 type Err = {
   assetsCss?: unknown;
@@ -18,10 +19,7 @@ export type Type = {
   dispose: () => Promise<void>;
 };
 
-export let create = async (
-  config: RemixConfig,
-  options: CompileOptions
-): Promise<Type> => {
+export let create = async ({ config, options }: Context): Promise<Type> => {
   let channels = {
     manifest: Channel.create<Manifest>(),
   };
