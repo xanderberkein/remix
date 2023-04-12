@@ -14,7 +14,6 @@ import * as devServer_unstable from "../devServer_unstable";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
-import { log } from "../logging";
 import { createApp } from "./create";
 import { getPreferredPackageManager } from "./getPreferredPackageManager";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "./setup";
@@ -127,7 +126,7 @@ export async function setup(platformArg?: string) {
 
   await setupRemix(platform);
 
-  log(`Successfully setup Remix for ${platform}.`);
+  console.log(`Successfully setup Remix for ${platform}.`);
 }
 
 export async function routes(
@@ -148,7 +147,7 @@ export async function build(
 ): Promise<void> {
   let mode = compiler.parseMode(modeArg ?? "", "production");
 
-  log(`Building Remix app in ${mode} mode...`);
+  console.log(`Building Remix app in ${mode} mode...`);
 
   if (modeArg === "production" && sourcemap) {
     console.warn(
@@ -184,7 +183,7 @@ export async function build(
       }
       process.exit(1);
     }
-    log(`Built in ${prettyMs(Date.now() - start)}`);
+    console.log(`Built in ${prettyMs(Date.now() - start)}`);
   } catch (error) {
     console.error(getErrorMessage(error));
     console.info("This is a Remix bug; file a bug report!");
